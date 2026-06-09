@@ -19,7 +19,18 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: "postgresql://user:password@localhost:5432/dummy_db" 
+      DATABASE_URL: "postgresql://user:password@localhost:5432/dummy_db"
+      IMAGEKIT_PUBLIC_KEY: "dummy_public_key"
+      IMAGEKIT_PRIVATE_KEY: "dummy_private_key"
+      IMAGEKIT_URL_ENDPOINT: "https://ik.imagekit.io/dummy"
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "dummy_clerk_key"
+      CLERK_SECRET_KEY: "dummy_clerk_secret"
+      STRIPE_SECRET_KEY: "dummy_stripe_key"
+      STRIPE_WEBHOOK_SECRET: "dummy_webhook_secret"
+      INNGEST_EVENT_KEY: "dummy_inngest_key"
+      INNGEST_SIGNING_KEY: "dummy_inngest_signing"
+      NEXT_PUBLIC_CURRENCY_SYMBOL: "$"
+      ADMIN_EMAIL: "admin@example.com"
 
     steps:
       - name: Checkout code
