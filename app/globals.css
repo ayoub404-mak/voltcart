@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+    --color-brand-primary: #4648d4;
+    --color-brand-primary-dark: #383ab2;
+    --color-brand-secondary: #006e2f;
+    --color-brand-ink: #111827;
+    --color-brand-muted: #64748b;
+    --text-about-hero: 4.75rem;
+}
+
+@layer components {
+    @keyframes marqueeScroll {
+        0% {
+            transform: translateX(0%);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+}
+
+@layer base {
+    button {
+        cursor: pointer;
+    }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}

@@ -1,0 +1,14 @@
+
+services:
+  app:
+    build: .
+    container_name: voltcart_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    
+    # BEST PRACTICE: Inject all your env vars automatically from your local file.
+    # This keeps your docker-compose.yml clean and secure.
+    env_file:
+      - .env
+    
