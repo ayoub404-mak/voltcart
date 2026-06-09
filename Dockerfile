@@ -11,14 +11,16 @@ RUN npm ci
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# ✅ FIX: ARG must be HERE, in the builder stage where prisma generate runs
+# ✅ CRITICAL: Declare ARG BEFORE any ENV or RUN commands that need it
 ARG DATABASE_URL
+
+# ✅ Set it as environment variable immediately
 ENV DATABASE_URL=${DATABASE_URL}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client (this now has access to DATABASE_URL)
+# Generate Prisma Client (now has access to DATABASE_URL)
 RUN npx prisma generate
 
 # Build the Next.js app
@@ -28,9 +30,6 @@ RUN npm run build
 # ---- Stage 3: Runner ----
 FROM node:20-alpine AS runner
 WORKDIR /app
-
-# ✅ The runner stage does NOT need DATABASE_URL as a build arg
-# It will be injected at runtime by AWS App Runner / docker-compose
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -42,7 +41,7 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma schema and related files
+# Copy Prisma files
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
