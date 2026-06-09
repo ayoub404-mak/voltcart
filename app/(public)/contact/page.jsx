@@ -116,8 +116,8 @@ export default function Contact() {
                             Get in touch
                         </h1>
                         <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-                            We're here to help. Whether you have questions about a product, shipping, or just want to say hi, our team is ready to assist.
-                        </p>
+                            {"We're here to help. Whether you have questions about a product, shipping, or just want to say hi, our team is ready to assist."} 
+                       </p>
                     </div>
 
                     <div className="mt-12 grid gap-6 lg:grid-cols-12">

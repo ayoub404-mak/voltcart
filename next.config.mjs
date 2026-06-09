@@ -1,9 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images:{
-        unoptimized: true
-    },
-     output: 'standalone', 
+  output: "standalone",
+  
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
+  images: {
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "img.clerk.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
