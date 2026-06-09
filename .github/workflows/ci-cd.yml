@@ -93,6 +93,17 @@ jobs:
         run: |
           docker build \
             --build-arg DATABASE_URL="postgresql://user:password@localhost:5432/dummy_db" \
+            --build-arg IMAGEKIT_PUBLIC_KEY="dummy_public_key" \
+            --build-arg IMAGEKIT_PRIVATE_KEY="dummy_private_key" \
+            --build-arg IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/dummy" \
+            --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="dummy_clerk_key" \
+            --build-arg CLERK_SECRET_KEY="dummy_clerk_secret" \
+            --build-arg STRIPE_SECRET_KEY="dummy_stripe_key" \
+            --build-arg STRIPE_WEBHOOK_SECRET="dummy_webhook_secret" \
+            --build-arg INNGEST_EVENT_KEY="dummy_inngest_key" \
+            --build-arg INNGEST_SIGNING_KEY="dummy_inngest_signing" \
+            --build-arg NEXT_PUBLIC_CURRENCY_SYMBOL="$" \
+            --build-arg ADMIN_EMAIL="admin@example.com" \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
