@@ -70,7 +70,7 @@ dist/
 # Prisma
 # ==========================
 # Prisma Migrate history (optional, but good to ignore if you don't want to share DB migration SQL files)
-# prisma/migrations/ 
+prisma/migrations/ 
 
 # ==========================
 # Terraform (Infrastructure as Code)
@@ -78,6 +78,7 @@ dist/
 # Ignore the .terraform directory (contains downloaded provider plugins)
 .terraform/
 .terraform.lock.hcl
+terraform/
 
 # Ignore Terraform state files (contains infrastructure state, sometimes sensitive data)
 *.tfstate
@@ -95,7 +96,28 @@ override.tf.json
 # Ignore sensitive variable files
 *.tfvars
 !*.tfvars.example
+#-------------------------------------------------------------
+# Ignore the entire infrastructure/terraform directory content
+/infrastructure/terraform/.terraform/
+/infrastructure/terraform/.terraform.lock.hcl
+/infrastructure/terraform/*.tfstate
+/infrastructure/terraform/*.tfstate.*
+/infrastructure/terraform/*.tfstate.backup
+/infrastructure/terraform/crash.log
+/infrastructure/terraform/override.tf
+/infrastructure/terraform/override.tf.json
+/infrastructure/terraform/*_override.tf
+/infrastructure/terraform/*_override.tf.json
+/infrastructure/terraform/*.tfvars
+!/infrastructure/terraform/*.tfvars.example
 
+# Also catch any terraform files in subdirectories
+**/infrastructure/terraform/.terraform/
+**/*.tfstate
+**/*.tfvars
+
+# Specifically for your secrets.tf file (should NEVER be committed)
+/infrastructure/terraform/secrets.tf
 # ==========================
 # Docker
 # ==========================
