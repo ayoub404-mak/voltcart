@@ -1,3 +1,4 @@
+@"
 node_modules
 .next
 .git
@@ -13,3 +14,8 @@ Dockerfile
 infrastructure
 .github
 *.md
+terraform.tfstate
+terraform.tfstate.backup
+.terraform
+.terraform.lock.hcl
+"@ | Out-File -FilePath .dockerignore -Encoding utf8
