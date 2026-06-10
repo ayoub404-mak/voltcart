@@ -1,7 +1,7 @@
 node_modules
 .next
 .git
-.gitignore
+.env
 .env.local
 .env*.local
 npm-debug.log
@@ -10,3 +10,6 @@ README.md
 .idea
 docker-compose.yml
 Dockerfile
+infrastructure
+.github
+*.md
