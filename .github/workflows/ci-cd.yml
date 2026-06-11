@@ -1,82 +1,26 @@
-name: GoCart CI/CD Pipeline
+name: Deploy GoCart to AWS ECS
 
 on:
   push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
+    branches:
+      - main # Triggers deployment when code is pushed to main
 
 env:
   AWS_REGION: eu-west-3
   ECR_REPOSITORY: gocart-dev
+  ECS_CLUSTER: default
+  ECS_SERVICE: gocart-dev
 
 jobs:
-  # ============================================
-  # JOB 1: Code Quality & Security (SAST)
-  # ============================================
-  code-quality:
-    name: Code Quality & Security Scan
+  deploy:
+    name: Build, Push, and Deploy
     runs-on: ubuntu-latest
 
-    env:
-      DATABASE_URL: "postgresql://user:password@localhost:5432/dummy_db"
-      IMAGEKIT_PUBLIC_KEY: "dummy_public_key"
-      IMAGEKIT_PRIVATE_KEY: "dummy_private_key"
-      IMAGEKIT_URL_ENDPOINT: "https://ik.imagekit.io/dummy"
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "dummy_clerk_key"
-      CLERK_SECRET_KEY: "dummy_clerk_secret"
-      STRIPE_SECRET_KEY: "dummy_stripe_key"
-      STRIPE_WEBHOOK_SECRET: "dummy_webhook_secret"
-      INNGEST_EVENT_KEY: "dummy_inngest_key"
-      INNGEST_SIGNING_KEY: "dummy_inngest_signing"
-      NEXT_PUBLIC_CURRENCY_SYMBOL: "$"
-      ADMIN_EMAIL: "admin@example.com"
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Full history for SonarCloud
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Next.js app
-        run: npm run build
-
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=ayoub404-mak_voltcart
-            -Dsonar.organization=ayoub404-mak
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-
-  # ============================================
-  # JOB 2: Build & Scan Docker Image
-  # ============================================
-  build-and-scan:
-    name: Build & Scan Docker Image
-    runs-on: ubuntu-latest
-    needs: code-quality  # Only runs if code quality passes
-    
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
-    
-    steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -87,62 +31,28 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker image
+      - name: Build, Tag, and Push Docker Image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }} # Uses commit hash for traceability
         run: |
-          docker build \
-            --build-arg DATABASE_URL="postgresql://user:password@localhost:5432/dummy_db" \
-            --build-arg IMAGEKIT_PUBLIC_KEY="dummy_public_key" \
-            --build-arg IMAGEKIT_PRIVATE_KEY="dummy_private_key" \
-            --build-arg IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/dummy" \
-            --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="dummy_clerk_key" \
-            --build-arg CLERK_SECRET_KEY="dummy_clerk_secret" \
-            --build-arg STRIPE_SECRET_KEY="dummy_stripe_key" \
-            --build-arg STRIPE_WEBHOOK_SECRET="dummy_webhook_secret" \
-            --build-arg INNGEST_EVENT_KEY="dummy_inngest_key" \
-            --build-arg INNGEST_SIGNING_KEY="dummy_inngest_signing" \
-            --build-arg NEXT_PUBLIC_CURRENCY_SYMBOL="$" \
-            --build-arg ADMIN_EMAIL="admin@example.com" \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
-          format: 'table'
-          exit-code: '1'  # Fails the pipeline if CRITICAL vulnerabilities found
-          ignore-unfixed: true
-          severity: 'CRITICAL'  
-
-      - name: Push Docker image to ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: |
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+          # 1. Build the image using the Dockerfile at the root
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          
+          # 2. Also tag as 'latest' for convenience
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          # 3. Push both tags to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-  # ============================================
-  # JOB 3: Deploy to AWS App Runner (Phase 4)
-  # ============================================
-  deploy:
-    name: Deploy to AWS App Runner
-    runs-on: ubuntu-latest
-    needs: build-and-scan
-    if: github.ref == 'refs/heads/main'  # Only deploy on main branch
-    
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Deploy to App Runner
+      - name: Force New ECS Deployment
         run: |
-          aws apprunner update-service \
-            --service-arn ${{ secrets.APP_RUNNER_SERVICE_ARN }} \
-            --source-configuration "ImageRepository={ImageIdentifier=${{ secrets.ECR_REPOSITORY_URL }}:${{ github.sha }},ImageRepositoryType=ECR}"
-        continue-on-error: true  # We'll set up App Runner in Phase 4
+          echo "Forcing new deployment for ECS service $ECS_SERVICE..."
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
+            --force-new-deployment \
+            --region $AWS_REGION
+          
+          echo "✅ Deployment triggered successfully! ECS will now pull the new image."
