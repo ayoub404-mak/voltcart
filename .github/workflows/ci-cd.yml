@@ -81,8 +81,10 @@ jobs:
         run: |
           docker build \
             --build-arg DATABASE_URL="postgresql://user:password@localhost:5432/dummy_db" \
+            --build-arg DIRECT_URL="postgresql://user:password@localhost:5432/dummy_db" \
             --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="dummy" \
             --build-arg CLERK_SECRET_KEY="dummy" \
+            --build-arg CLERK_WEBHOOK_SECRET="dummy" \
             --build-arg STRIPE_SECRET_KEY="dummy" \
             --build-arg STRIPE_WEBHOOK_SECRET="dummy" \
             --build-arg IMAGEKIT_PUBLIC_KEY="dummy" \
@@ -95,7 +97,6 @@ jobs:
             -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
           
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
-
       - name: Run Trivy Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
         with:
