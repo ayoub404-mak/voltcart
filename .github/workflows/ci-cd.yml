@@ -1,9 +1,10 @@
-name: Deploy GoCart to AWS ECS
+name: GoCart CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main # Triggers deployment when code is pushed to main
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 env:
   AWS_REGION: eu-west-3
@@ -12,10 +13,53 @@ env:
   ECS_SERVICE: gocart-dev
 
 jobs:
-  deploy:
-    name: Build, Push, and Deploy
+  # =========================================================
+  # STEP 1: BUILD & TEST (Code Quality)
+  # =========================================================
+  build-and-test:
+    name: 1. Build & Test
     runs-on: ubuntu-latest
+    env:
+      # Dummy variables required so Next.js/Prisma don't crash during CI build
+      DATABASE_URL: "postgresql://user:password@localhost:5432/dummy_db"
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "dummy_clerk_key"
+      CLERK_SECRET_KEY: "dummy_clerk_secret"
+      STRIPE_SECRET_KEY: "dummy_stripe_key"
+      IMAGEKIT_PUBLIC_KEY: "dummy_imagekit_key"
+      INNGEST_EVENT_KEY: "dummy_inngest_key"
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Linter
+        run: npm run lint
+        continue-on-error: true # Bypasses the Next.js 15 ESLint circular bug if it occurs
+
+      - name: Build Next.js App
+        run: npm run build
+
+      - name: Run Tests
+        run: npm test --passWithNoTests
+
+  # =========================================================
+  # STEP 2: BUILD DOCKER IMAGE & SECURITY SCAN
+  # =========================================================
+  build-and-scan:
+    name: 2. Build Docker & Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' # Only build/push on main branch
+    
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -31,28 +75,67 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, Tag, and Push Docker Image
+      - name: Build Docker Image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }} # Uses commit hash for traceability
         run: |
-          # 1. Build the image using the Dockerfile at the root
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build \
+            --build-arg DATABASE_URL="postgresql://user:password@localhost:5432/dummy_db" \
+            --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="dummy" \
+            --build-arg CLERK_SECRET_KEY="dummy" \
+            --build-arg STRIPE_SECRET_KEY="dummy" \
+            --build-arg STRIPE_WEBHOOK_SECRET="dummy" \
+            --build-arg IMAGEKIT_PUBLIC_KEY="dummy" \
+            --build-arg IMAGEKIT_PRIVATE_KEY="dummy" \
+            --build-arg IMAGEKIT_URL_ENDPOINT="dummy" \
+            --build-arg INNGEST_EVENT_KEY="dummy" \
+            --build-arg INNGEST_SIGNING_KEY="dummy" \
+            --build-arg NEXT_PUBLIC_CURRENCY_SYMBOL="$" \
+            --build-arg ADMIN_EMAIL="admin@example.com" \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
           
-          # 2. Also tag as 'latest' for convenience
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
-          # 3. Push both tags to ECR
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'         # Fails pipeline ONLY if CRITICAL vulnerabilities are found
+          ignore-unfixed: true
+          severity: 'CRITICAL'   # Ignoring HIGH/MEDIUM to keep pipeline moving
+
+      - name: Push Docker Image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+  # =========================================================
+  # STEP 3: DEPLOY TO AWS ECS EXPRESS MODE
+  # =========================================================
+  deploy-ecs:
+    name: 3. Deploy to ECS Express
+    runs-on: ubuntu-latest
+    needs: build-and-scan
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Force New ECS Deployment
         run: |
-          echo "Forcing new deployment for ECS service $ECS_SERVICE..."
+          echo "🚀 Triggering new deployment for ECS Express service..."
           aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service $ECS_SERVICE \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
             --force-new-deployment \
-            --region $AWS_REGION
+            --region ${{ env.AWS_REGION }}
           
-          echo "✅ Deployment triggered successfully! ECS will now pull the new image."
+          echo "✅ Deployment triggered successfully! ECS will now pull the new image from ECR."
