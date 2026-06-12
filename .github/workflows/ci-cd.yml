@@ -20,13 +20,20 @@ jobs:
     name: 1. Build & Test
     runs-on: ubuntu-latest
     env:
-      # Dummy variables required so Next.js/Prisma don't crash during CI build
       DATABASE_URL: "postgresql://user:password@localhost:5432/dummy_db"
+      DIRECT_URL: "postgresql://user:password@localhost:5432/dummy_db"
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "dummy_clerk_key"
       CLERK_SECRET_KEY: "dummy_clerk_secret"
+      CLERK_WEBHOOK_SECRET: "dummy_webhook_secret"
       STRIPE_SECRET_KEY: "dummy_stripe_key"
+      STRIPE_WEBHOOK_SECRET: "dummy_webhook_secret"
       IMAGEKIT_PUBLIC_KEY: "dummy_imagekit_key"
+      IMAGEKIT_PRIVATE_KEY: "dummy_private_key"       # <-- ADDED
+      IMAGEKIT_URL_ENDPOINT: "https://ik.imagekit.io/dummy" # <-- ADDED
       INNGEST_EVENT_KEY: "dummy_inngest_key"
+      INNGEST_SIGNING_KEY: "dummy_inngest_signing"
+      NEXT_PUBLIC_CURRENCY_SYMBOL: "$"
+      ADMIN_EMAIL: "admin@example.com"
       
     steps:
       - name: Checkout Code
