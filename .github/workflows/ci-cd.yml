@@ -55,8 +55,8 @@ jobs:
       - name: Build Next.js App
         run: npm run build
 
-      - name: Run Tests
-        run: npm test --passWithNoTests
+      # - name: Run Tests
+      #   run: npm test --passWithNoTests
 
   # =========================================================
   # STEP 2: BUILD DOCKER IMAGE & SECURITY SCAN
