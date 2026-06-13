@@ -1,11 +1,10 @@
 #!/bin/sh
 set -e
 
-echo "Running Prisma database migrations..."
-# This applies any pending migrations safely without prompting
-npx prisma migrate deploy
+echo "Syncing Prisma database schema..."
+# db push syncs the schema without requiring migration files
+# --skip-generate prevents it from trying to rebuild the client (which we already did in Docker)
+npx prisma db push --skip-generate
 
 echo "Starting Next.js application..."
-# 'exec' replaces the shell process with the Node process, 
-# ensuring proper signal handling (like graceful shutdowns)
 exec node server.js
