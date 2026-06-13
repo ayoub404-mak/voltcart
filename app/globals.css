@@ -1,5 +1,11 @@
 @import "tailwindcss";
+/* ✅ ADD THIS LINE at the very top */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap');
 
+@import "tailwindcss/preflight";
+@import "tailwindcss/utilities";
+
+/* ... rest of your globals.css ... */
 @theme {
     --color-brand-primary: #4648d4;
     --color-brand-primary-dark: #383ab2;
