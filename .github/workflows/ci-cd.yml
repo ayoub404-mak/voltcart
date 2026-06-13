@@ -10,7 +10,7 @@ env:
   AWS_REGION: eu-west-3
   ECR_REPOSITORY: gocart-dev
   ECS_CLUSTER: default
-  ECS_SERVICE: gocart-dev
+  ECS_SERVICE: gocart-dev-v3
 
 jobs:
   # =========================================================
