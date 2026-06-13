@@ -1,9 +1,6 @@
-@import "tailwindcss";
-/* ✅ ADD THIS LINE at the very top */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap');
+@import "tailwindcss";
 
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
 
 /* ... rest of your globals.css ... */
 @theme {
