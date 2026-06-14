@@ -30,17 +30,6 @@
 - **Vendor Dashboards:** Dedicated dashboards for vendors to manage products, view sales analytics, and track orders.
 - **Admin Panel:** A comprehensive dashboard for platform administrators to oversee vendors, products, and commissions.
 
-## 🛠️ Tech Stack <a name="-tech-stack"></a>
-
-- **Framework:** Next.js
-- **Styling:** Tailwind CSS
-- **UI Components:** Lucide React for icons
-- **State Management:** Redux Toolkit
-
-## 🚀 Getting Started <a name="-getting-started"></a>
-
-First, install the dependencies. We recommend using `npm` for this project.
-
 ```bash
 npm install
 ```
