@@ -29,7 +29,6 @@
 - **Customer-Facing Storefront:** A beautiful and responsive user interface for customers to browse and purchase products.
 - **Vendor Dashboards:** Dedicated dashboards for vendors to manage products, view sales analytics, and track orders.
 - **Admin Panel:** A comprehensive dashboard for platform administrators to oversee vendors, products, and commissions.
-## Archeticture
 
 ### 🏗️ Cloud Architecture & DevSecOps Pipeline
 
