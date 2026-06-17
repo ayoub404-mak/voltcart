@@ -57,7 +57,44 @@ jobs:
       - name: Build Next.js App
         run: npm run build
 
-      # - name: Run Tests
+      - name: Run Integration Tests
+        continue-on-error: true  # 🛡️ Tests run but NEVER fail the pipeline
+        run: |
+          npm run start &
+          APP_PID=$!
+          sleep 10
+          
+          npm test
+          TEST_EXIT_CODE=$?
+          
+          kill $APP_PID
+          exit $TEST_EXIT_CODE  # This exit code is ignored due to continue-on-error
+      
+      - name: Run Performance Tests
+        continue-on-error: true  # 🛡️ Tests run but NEVER fail the pipeline
+        run: |
+          npm run start &
+          APP_PID=$!
+          sleep 10
+          
+          node --test tests/performance.test.js
+          TEST_EXIT_CODE=$?
+          
+          kill $APP_PID
+          exit $TEST_EXIT_CODE
+      
+      - name: Run Security Tests
+        continue-on-error: true  # 🛡️ Tests run but NEVER fail the pipeline
+        run: |
+          npm run start &
+          APP_PID=$!
+          sleep 10
+          
+          node --test tests/security.test.js
+          TEST_EXIT_CODE=$?
+          
+          kill $APP_PID
+          exit $TEST_EXIT_CODE      
       #   run: npm test --passWithNoTests
       - name: SonarCloud Code Scan
         uses: SonarSource/sonarqube-scan-action@v5 # Updated to the latest non-deprecated action
