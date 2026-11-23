@@ -1,4 +1,4 @@
-# 🛒 GoCart - Multi-Vendor E-Commerce Platform
+# 🛒 VoltCart - Multi-Vendor E-Commerce Platform
 
 > A production-grade, cloud-native multi-vendor e-commerce platform built with Next.js 15 and deployed on AWS with a fully automated DevSecOps pipeline.
 
