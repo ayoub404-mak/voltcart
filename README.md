@@ -9,7 +9,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
 
-![GoCart Preview](https://img.shields.io/badge/Live-Demo-success)
+![VoltCart Preview](https://img.shields.io/badge/Live-Demo-success)
 
 ---
 
@@ -34,7 +34,7 @@
 
 ## 🌟 Overview
 
-**GoCart** is a modern, scalable, and secure multi-vendor e-commerce platform designed to handle real-world traffic while maintaining optimal performance. It combines cutting-edge web technologies with enterprise-grade cloud infrastructure, delivering a complete DevSecOps solution.
+**VoltCart** is a modern, scalable, and secure multi-vendor e-commerce platform designed to handle real-world traffic while maintaining optimal performance. It combines cutting-edge web technologies with enterprise-grade cloud infrastructure, delivering a complete DevSecOps solution.
 
 ### 🎯 Key Highlights
 
